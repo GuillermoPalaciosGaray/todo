@@ -51,8 +51,7 @@
         <action
             android:id="@+id/action_signUpFragment_to_homeFragment"
             app:destination="@id/homeFragment"
-            app:popUpTo="@id/signUpFragment"
-            app:popUpToInclusive="true" />
+            app:enterAnim="@anim/fade_in" />
     </fragment>
     <fragment
         android:id="@+id/homeFragment"
