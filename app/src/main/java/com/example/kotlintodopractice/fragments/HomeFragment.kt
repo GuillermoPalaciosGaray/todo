@@ -12,7 +12,9 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.kotlintodopractice.R
 import com.example.kotlintodopractice.databinding.FragmentHomeBinding
 import com.example.kotlintodopractice.utils.adapter.TaskAdapter
-import com.example.kotlintodopractice.utils.model.ToDoData
+import com.example.kotlintodopractice.utils.model.UserData
+import com.example.kotlintodopractice.MyFirebaseMessagingService
+import com.example.kotlintodopractice.fragments.ToDoDialogFragment.Companion
 import com.google.android.material.textfield.TextInputEditText
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
@@ -21,6 +23,7 @@ import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
+
 
 class HomeFragment : Fragment(), ToDoDialogFragment.OnDialogNextBtnClickListener,
     TaskAdapter.TaskAdapterInterface {
@@ -33,8 +36,9 @@ class HomeFragment : Fragment(), ToDoDialogFragment.OnDialogNextBtnClickListener
     private lateinit var authId: String
 
     private lateinit var taskAdapter: TaskAdapter
-    private lateinit var toDoItemList: MutableList<ToDoData>
+    private lateinit var toDoItemList: MutableList<UserData>
     private lateinit var navController: NavController
+    private lateinit var messagingService: MyFirebaseMessagingService
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -78,8 +82,10 @@ class HomeFragment : Fragment(), ToDoDialogFragment.OnDialogNextBtnClickListener
 
                 toDoItemList.clear()
                 for (taskSnapshot in snapshot.children) {
+                    val userData = taskSnapshot.getValue(UserData::class.java)
+                    Log.d(TAG, "taskSnapShot: " + taskSnapshot.value.toString())
                     val todoTask =
-                        taskSnapshot.key?.let { ToDoData(it, taskSnapshot.value.toString()) }
+                        taskSnapshot.key?.let { userData }
 
                     if (todoTask != null) {
                         toDoItemList.add(todoTask)
@@ -103,10 +109,10 @@ class HomeFragment : Fragment(), ToDoDialogFragment.OnDialogNextBtnClickListener
 
         auth = FirebaseAuth.getInstance()
         authId = auth.currentUser!!.uid
-        database = Firebase.database.reference.child("Tasks")
+        database = Firebase.database.reference.child("users")
             .child(authId)
 
-
+        messagingService = MyFirebaseMessagingService()
         binding.mainRecyclerView.setHasFixedSize(true)
         binding.mainRecyclerView.layoutManager = LinearLayoutManager(context)
 
@@ -116,14 +122,14 @@ class HomeFragment : Fragment(), ToDoDialogFragment.OnDialogNextBtnClickListener
         binding.mainRecyclerView.adapter = taskAdapter
     }
 
-    override fun saveTask(todoTask: String, todoEdit: TextInputEditText) {
-
-        database
-            .push().setValue(todoTask)
+    override fun saveTask(userData: UserData, todoEdit: TextInputEditText) {
+        val userId = userData.name+userData.studentId
+        database.child(userId).setValue(userData)
             .addOnCompleteListener {
                 if (it.isSuccessful) {
-                    Toast.makeText(context, "Task Added Successfully!", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "User Added Successfully!", Toast.LENGTH_SHORT).show()
                     todoEdit.text = null
+//                    messagingService.generateNotification("User Added","A new user was added succesfully")
 
                 } else {
                     Toast.makeText(context, it.exception.toString(), Toast.LENGTH_SHORT).show()
@@ -133,10 +139,10 @@ class HomeFragment : Fragment(), ToDoDialogFragment.OnDialogNextBtnClickListener
 
     }
 
-    override fun updateTask(toDoData: ToDoData, todoEdit: TextInputEditText) {
-        val map = HashMap<String, Any>()
-        map[toDoData.taskId] = toDoData.task
-        database.updateChildren(map).addOnCompleteListener {
+    override fun updateTask(userData: UserData, todoEdit: TextInputEditText) {
+        val userId=  userData.name+userData.studentId
+        Log.d(TAG,"Updating user data in updateTask: "+userData.toString())
+            database.child(userId).updateChildren(userData.toMap()).addOnCompleteListener {
             if (it.isSuccessful) {
                 Toast.makeText(context, "Updated Successfully", Toast.LENGTH_SHORT).show()
             } else {
@@ -146,8 +152,9 @@ class HomeFragment : Fragment(), ToDoDialogFragment.OnDialogNextBtnClickListener
         }
     }
 
-    override fun onDeleteItemClicked(toDoData: ToDoData, position: Int) {
-        database.child(toDoData.taskId).removeValue().addOnCompleteListener {
+    override fun onDeleteItemClicked(userData: UserData, position: Int) {
+        val userId=  userData.name+userData.studentId
+        database.child(userId).removeValue().addOnCompleteListener {
             if (it.isSuccessful) {
                 Toast.makeText(context, "Deleted Successfully", Toast.LENGTH_SHORT).show()
             } else {
@@ -156,11 +163,10 @@ class HomeFragment : Fragment(), ToDoDialogFragment.OnDialogNextBtnClickListener
         }
     }
 
-    override fun onEditItemClicked(toDoData: ToDoData, position: Int) {
+    override fun onEditItemClicked(userData: UserData, position: Int) {
         if (frag != null)
             childFragmentManager.beginTransaction().remove(frag!!).commit()
-
-        frag = ToDoDialogFragment.newInstance(toDoData.taskId, toDoData.task)
+        frag = ToDoDialogFragment.newInstance(userData)
         frag!!.setListener(this)
         frag!!.show(
             childFragmentManager,

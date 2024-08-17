@@ -5,9 +5,9 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.example.kotlintodopractice.databinding.EachTodoItemBinding
-import com.example.kotlintodopractice.utils.model.ToDoData
+import com.example.kotlintodopractice.utils.model.UserData
 
-class TaskAdapter(private val list: MutableList<ToDoData>) : RecyclerView.Adapter<TaskAdapter.TaskViewHolder>() {
+class TaskAdapter(private val list: MutableList<UserData>) : RecyclerView.Adapter<TaskAdapter.TaskViewHolder>() {
 
     private  val TAG = "TaskAdapter"
     private var listener:TaskAdapterInterface? = null
@@ -25,9 +25,9 @@ class TaskAdapter(private val list: MutableList<ToDoData>) : RecyclerView.Adapte
     override fun onBindViewHolder(holder: TaskViewHolder, position: Int) {
         with(holder) {
             with(list[position]) {
-                binding.todoTask.text = this.task
+                binding.todoTask.text = this.name
 
-                Log.d(TAG, "onBindViewHolder: "+this)
+                Log.d(TAG, "onBindViewHolder: "+this.toString())
                 binding.editTask.setOnClickListener {
                     listener?.onEditItemClicked(this , position)
                 }
@@ -44,8 +44,8 @@ class TaskAdapter(private val list: MutableList<ToDoData>) : RecyclerView.Adapte
     }
 
     interface TaskAdapterInterface{
-        fun onDeleteItemClicked(toDoData: ToDoData , position : Int)
-        fun onEditItemClicked(toDoData: ToDoData , position: Int)
+        fun onDeleteItemClicked(userData: UserData , position : Int)
+        fun onEditItemClicked(userData: UserData , position: Int)
     }
 
 }

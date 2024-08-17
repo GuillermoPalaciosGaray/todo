@@ -45,7 +45,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         // You may want to send this token to your server for further use
     }
 
-    private fun generateNotification(title: String, message: String){
+    fun generateNotification(title: String, message: String){
         val intent = Intent(this, MainActivity::class.java)
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
         val pendingIntent = PendingIntent.getActivity(

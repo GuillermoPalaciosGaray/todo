@@ -1,13 +1,13 @@
 package com.example.kotlintodopractice.fragments
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.DialogFragment
-import com.example.kotlintodopractice.R
 import com.example.kotlintodopractice.databinding.FragmentToDoDialogBinding
-import com.example.kotlintodopractice.utils.model.ToDoData
+import com.example.kotlintodopractice.utils.model.UserData
 import com.google.android.material.textfield.TextInputEditText
 
 
@@ -15,7 +15,7 @@ class ToDoDialogFragment : DialogFragment() {
 
     private lateinit var binding:FragmentToDoDialogBinding
     private var listener : OnDialogNextBtnClickListener? = null
-    private var toDoData: ToDoData? = null
+    private var userData: UserData? = null
 
 
     fun setListener(listener: OnDialogNextBtnClickListener) {
@@ -25,11 +25,14 @@ class ToDoDialogFragment : DialogFragment() {
     companion object {
         const val TAG = "DialogFragment"
         @JvmStatic
-        fun newInstance(taskId: String, task: String) =
+        fun newInstance(userData: UserData) =
             ToDoDialogFragment().apply {
                 arguments = Bundle().apply {
-                    putString("taskId", taskId)
-                    putString("task", task)
+                    putString("name", userData.name)
+                    putString("lastName", userData.lastName)
+                    putString("projectName", userData.projectName)
+                    putString("studentId", userData.studentId)
+                    putString("tutorName", userData.tutorName)
                 }
             }
     }
@@ -50,9 +53,17 @@ class ToDoDialogFragment : DialogFragment() {
         super.onViewCreated(view, savedInstanceState)
 
         if (arguments != null){
+            userData = UserData(arguments?.getString("name").toString(),
+                arguments?.getString("lastName").toString(),
+                arguments?.getString("studentId").toString(),
+                arguments?.getString("projectName").toString(),
+                arguments?.getString("tutorName").toString())
 
-            toDoData = ToDoData(arguments?.getString("taskId").toString() ,arguments?.getString("task").toString())
-            binding.todoEt.setText(toDoData?.task)
+            binding.name.setText(userData?.name)
+            binding.lastName.setText(userData?.lastName)
+            binding.studentId.setText(userData?.studentId)
+            binding.projectName.setText(userData?.projectName)
+            binding.tutorName.setText(userData?.tutorName)
         }
 
 
@@ -62,22 +73,32 @@ class ToDoDialogFragment : DialogFragment() {
 
         binding.todoNextBtn.setOnClickListener {
 
-            val todoTask = binding.todoEt.text.toString()
-            if (todoTask.isNotEmpty()){
-                if (toDoData == null){
-                    listener?.saveTask(todoTask , binding.todoEt)
-                }else{
-                    toDoData!!.task = todoTask
-                    listener?.updateTask(toDoData!!, binding.todoEt)
+            val name = binding.name.text.toString()
+            val studentId = binding.studentId.text.toString()
+            val userId = name+studentId
+            if(userId.isNotEmpty()) {
+                if (userData?.lastName?.isEmpty() == true) {
+                    val lastName    = binding.lastName.text.toString()
+                    val projectName = binding.projectName.text.toString()
+                    val tutorName = binding.tutorName.text.toString()
+                    userData = UserData(name,lastName,studentId,projectName,tutorName)
+                    listener?.saveTask(userData!!, binding.name)
+                    Log.d(TAG, "Saving user data")
+                } else {
+                    val lastName    = binding.lastName.text.toString()
+                    val projectName = binding.projectName.text.toString()
+                    val tutorName = binding.tutorName.text.toString()
+                    userData = UserData(name,lastName,studentId,projectName,tutorName)
+                    Log.d(TAG, "Updating user data: "+userData.toString())
+                    listener?.updateTask(userData!!, binding.name)
                 }
-
             }
         }
     }
 
     interface OnDialogNextBtnClickListener{
-        fun saveTask(todoTask:String , todoEdit:TextInputEditText)
-        fun updateTask(toDoData: ToDoData , todoEdit:TextInputEditText)
+        fun saveTask(userData: UserData , todoEdit:TextInputEditText)
+        fun updateTask(userData: UserData , todoEdit:TextInputEditText)
     }
 
 }

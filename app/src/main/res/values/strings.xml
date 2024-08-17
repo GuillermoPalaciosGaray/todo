@@ -5,6 +5,10 @@
     <string name="enter_your_email">Enter Your Email .....</string>
     <string name="enter_your_pass">Enter Your Password .....</string>
     <string name="re_enter_your_pass">Re-enter Your Password .....</string>
-    <string name="type_your_task">Type your task .....</string>
+    <string name="type_your_name">Type your name .....</string>
+    <string name="type_your_last_name">Type your last name .....</string>
+    <string name="type_your_student_id">Type your student id .....</string>
+    <string name="type_your_project_name">Type your project name .....</string>
+    <string name="type_your_tutor_name">Type the name of your tutor .....</string>
     <string name="logout_button_text">Logout</string>
 </resources>
